@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DamJar — Asistente en la nube</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🤖 DamJar</h1>
+    <p class="subtitulo">Asistente en la nube (Groq) — habla en vivo o escribe</p>
+
+    <div id="estado">Presiona el micrófono para hablar</div>
+    <button id="micBtn">🎤</button>
+
+    <div id="textoInput">
+      <input type="text" id="cajaTexto" placeholder="...o escribe tu pregunta aquí">
+      <button id="enviarBtn">Enviar</button>
+    </div>
+
+    <div id="imagenInput">
+      <label for="cajaImagen" id="imagenBtn">📷 Enviar imagen</label>
+      <input type="file" id="cajaImagen" accept="image/*" hidden>
+    </div>
+
+    <div id="chat"></div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
