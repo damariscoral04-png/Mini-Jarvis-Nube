@@ -1,85 +1,57 @@
-# ==================================================
-# EXPLORACIÓN DE LA ARQUITECTURA TRANSFORMER
-# Tokenización | Embeddings | Atención | Limitaciones
-# Módulo de exploración pedido en la sección 5.1 del proyecto
-# ==================================================
-#
-# NOTA TÉCNICA: Ollama (usado en main.py) no expone los tensores
-# internos del modelo (embeddings, pesos de atención) a través de
-# su API, solo el texto de entrada/salida. Por eso este módulo usa
-# un modelo equivalente de Hugging Face (bert-base-uncased) que sí
-# permite inspeccionar esos valores con output_attentions=True.
-# El tipo de arquitectura (Transformer) y el proceso interno
-# (tokenizar -> embeber -> atender -> predecir) es el mismo en ambos.
+"""
+MÓDULO DE EXPLORACIÓN DE LA ARQUITECTURA - TRANSFORMER - DamJar 
+Tokenización, embeddings y self-attention
+"""
+
+print("="*60)
+print("EXPLORACIÓN DEL MODELO - ARQUITECTURA TRANSFORMER")
+print("="*60)
 
 from transformers import AutoTokenizer, AutoModel
 import torch
+import numpy as np
 
-NOMBRE_MODELO = "bert-base-uncased"
+# ============================================================
+# 1TOKENIZACIÓN — Texto → tokens numéricos
+# ============================================================
+print("\n 1. TOKENIZACIÓN")
+print("-" * 40)
+texto_prueba = "Hola, soy DamJar, asistente de Damaris. Soy un asistente basado en inteligencia artificial."
+print(f"Texto de entrada: {texto_prueba}")
 
-print("=" * 70)
-print("EXPLORACIÓN DEL MODELO - ARQUITECTURA TRANSFORMER")
-print("=" * 70)
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+tokens = tokenizer(texto_prueba, return_tensors="pt")
 
-tokenizador = AutoTokenizer.from_pretrained(NOMBRE_MODELO)
-modelo = AutoModel.from_pretrained(NOMBRE_MODELO, output_attentions=True)
+print(f"\n Tokens generados: {len(tokens['input_ids'][0])}")
+print(f"IDs de tokens: {tokens['input_ids'].tolist()[0]}")
+palabras_tokens = tokenizer.convert_ids_to_tokens(tokens['input_ids'][0])
+print(f"Palabras/subpalabras: {palabras_tokens}")
+print("👉 Explicación: El texto se divide en unidades numéricas que el modelo puede procesar.")
 
+# ============================================================
+#  EMBEDDINGS — Representación vectorial
+# ============================================================
+print("\n 2. EMBEDDINGS (Representación vectorial)")
+print("-" * 40)
+modelo = AutoModel.from_pretrained("bert-base-uncased", output_attentions=True)
+salida = modelo(**tokens)
 
-def analizar_arquitectura(texto_prueba):
-    print(f"\nFrase de entrada: {texto_prueba}")
-    print("-" * 70)
+embeddings = salida.last_hidden_state
+print(f"Forma del tensor de embeddings: {embeddings.shape}")
+print(f"   → {embeddings.shape[1]} tokens × {embeddings.shape[2]} dimensiones")
+print(" Explicación: Cada token se convierte en un vector que codifica su significado.")
 
-    # 1. TOKENIZACIÓN ---------------------------------------------------
-    # El texto se divide en unidades (tokens) que el modelo entiende
-    # como números (IDs), no como palabras.
-    tokens = tokenizador.tokenize(texto_prueba)
-    entradas = tokenizador(texto_prueba, return_tensors="pt")
-    print("\n1) TOKENIZACIÓN")
-    print(f"   Tokens: {tokens}")
-    print(f"   Cantidad de tokens: {len(tokens)}")
-    print(f"   IDs numéricos: {entradas['input_ids'].tolist()[0]}")
+# ============================================================
+# SELF-ATTENTION — Conexiones entre tokens
+# ============================================================
+print("\n 3. SELF-ATTENTION (Mecanismo de atención)")
+print("-" * 40)
+pesos_atencion = salida.attentions[0][0]
+print(f" Matriz de atención: {pesos_atencion.shape}")
+print(" Explicación: Cada token 'mira' a los demás para entender el contexto.")
+if len(palabras_tokens) >= 6:
+    print(f"   Ejemplo: El token '{palabras_tokens[3]}' presta atención a '{palabras_tokens[5]}' con peso: {pesos_atencion[3,5]:.4f}")
 
-    # 2, 3 y 4. EMBEDDING + ATENCIÓN + ACTUALIZACIÓN POR CONTEXTO -------
-    # Cada token se convierte en un vector (embedding). Ese vector pasa
-    # por varias capas de self-attention + feed-forward, donde cada
-    # token "mira" a los demás tokens y actualiza su representación
-    # según el contexto de la frase completa.
-    with torch.no_grad():
-        salidas = modelo(**entradas)
-        atencion_ultima_capa = salidas.attentions[-1]
-
-    print("\n2) EMBEDDING")
-    print(f"   Dimensión del vector por token: {salidas.last_hidden_state.shape[2]}")
-
-    print("\n3) ATENCIÓN (self-attention)")
-    print(f"   Cabeceras de atención en la última capa: {atencion_ultima_capa.shape[1]}")
-    print("   Cada token calcula un peso de atención hacia todos los demás tokens.")
-
-    # 5. PREDICCIÓN CON SOFTMAX ------------------------------------------
-    # En un modelo generativo, al final se aplica softmax sobre el
-    # vocabulario completo para obtener la probabilidad de cada
-    # palabra posible como "siguiente token".
-    print("\n4) PREDICCIÓN (softmax)")
-    print("   Softmax convierte los valores del modelo en probabilidades")
-    print("   y se elige el token más probable como siguiente palabra.")
-
-    # 6. REPETICIÓN ---------------------------------------------------------
-    print("\n5) REPETICIÓN")
-    print("   El token elegido se agrega al texto y el proceso se repite")
-    print("   hasta llegar a un límite o a un token de fin de secuencia.")
-
-    # LIMITACIONES -----------------------------------------------------------
-    print("\n" + "=" * 70)
-    print("LIMITACIONES DEL MODELO")
-    print("=" * 70)
-    print("- Alucinaciones: puede inventar información con total confianza.")
-    print("- Razonamiento matemático: falla con cálculos numéricos exactos.")
-    print("- Contexto largo: la atención se diluye y pierde información antigua.")
-    print("- Sesgos: hereda los sesgos del corpus de entrenamiento.")
-    print("- Sin memoria real: no recuerda nada fuera del contexto actual.")
-
-
-if __name__ == "__main__":
-    analizar_arquitectura(
-        "Mini-JARVIS usa inteligencia artificial basada en la arquitectura Transformer."
-    )
+print("\n" + "="*60)
+print(" EXPLORACIÓN COMPLETA — Lista para la sustentación")
+print("="*60)

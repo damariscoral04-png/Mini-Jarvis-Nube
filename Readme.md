@@ -1,73 +1,65 @@
-# Mini-JARVIS — Asistente de voz inteligente (versión NUBE)
-Proyecto Integrador | Redes Neuronales | CENESTUR
+# DamJar — versión en la nube (Groq)
 
-## Descripción
-Misma arquitectura que la versión local, pero el LLM corre en la nube
-a través de la API de **Groq** en vez de un modelo local con Ollama.
-El STT (Whisper) y el TTS siguen corriendo en tu computadora.
-
-## Modos de uso
-- 🎤 **Por voz:** presiona ENTER y habla por el micrófono
-- ⌨️ **Por texto:** escribe tu pregunta directamente
-- 🔊 **Salida:** la respuesta siempre se reproduce por voz
+Versión web del asistente, pensada como complemento de la versión local
+de escritorio. Usa el mismo concepto (personalidad, memoria de
+conversación) pero con un LLM en la nube (Groq) en vez de local, y
+captura/reproduce voz **en vivo** directamente en el navegador (Web
+Speech API), sin grabar audio a un archivo ni instalar Vosk/pyttsx3.
 
 ## Estructura del proyecto
 ```
-Mini-Jarvis-nube/
-├── Asistente.py         → asistente completo (voz y texto, LLM vía Groq)
-├── exploracion.py        → módulo de exploración del modelo (igual que la versión local)
-├── Requerimientos.txt     → dependencias
-├── .gitignore
-├── Readme.md
-└── ffmpeg.exe
+Mini-jarvis-nube/
+├── Asistente.py           → backend: sirve la página y habla con Groq
+├── Packages.txt            → dependencias de Python
+├── .env                    → tu API key de Groq (no se sube a GitHub)
+└── App/
+    ├── app.html             → la página en sí
+    ├── css/
+    │   └── app.css          → estilos
+    └── js/
+        └── app.js           → micrófono en vivo, voz, memoria de conversación
 ```
+
+## Por qué es más liviana que la versión local
+No necesita: Ollama, modelo de Vosk, Tesseract, ni las librerías pesadas
+como `torch`/`transformers`. Solo un servidor chico en Python que le
+pasa el texto a Groq, y el navegador se encarga de todo el audio.
 
 ## Instalación
-```bash
-pip install -r Requerimientos.txt
+
+1. Instala las dependencias:
+   ```
+   pip install -r Packages.txt
+   ```
+2. Consigue tu API key gratis en https://console.groq.com (sección "API Keys").
+3. Abre tu archivo `.env` y pon ahí tu API key:
+   ```
+   GROQ_API_KEY=tu_key_real_aqui
+   ```
+   (El archivo `.env` **no** debe subirse a GitHub — agrégalo al `.gitignore`.)
+
+## Ejecutarlo
 ```
-Necesitas una cuenta de **Groq** con tu propia API key (gratis) y un archivo
-`.env` con esa clave. Ver la sección "Cómo conseguir la API key" más abajo.
-
-Y **ffmpeg** instalado en el sistema (o su ejecutable disponible en el PATH,
-como el `ffmpeg.exe` que ya está en esta carpeta) para que Whisper pueda
-procesar el audio.
-
-## Cómo conseguir la API key de Groq
-1. Entra a **https://console.groq.com** y crea una cuenta (es gratis).
-2. En el panel, busca la sección **"API Keys"** y crea una nueva (empieza con `gsk_...`).
-3. Copia esa clave.
-4. En esta misma carpeta (`Mini-Jarvis-nube/`), crea un archivo llamado
-   exactamente `.env` (sin nombre antes del punto) con esta línea adentro:
-   ```
-   GROQ_API_KEY="gsk_tu_clave_aqui"
-   ```
-5. Ese archivo nunca se sube a GitHub porque ya está en el `.gitignore`.
-
-## Ejecución
-```bash
-# Asistente de voz y texto (Groq)
 python Asistente.py
-
-# Exploración de la arquitectura Transformer
-python exploracion.py
 ```
+Abre en el navegador (usa **Google Chrome**, es el que mejor soporta la
+Web Speech API): http://localhost:5000
 
-## Proceso interno del modelo (identificación)
-1. **Tokenización**: el texto se divide en tokens (~30-50 según el idioma).
-2. **Embedding**: cada token se convierte en un vector de alta dimensión.
-3. **Atención + feed-forward**: cada token "mira" a todos los demás para
-   construir una representación contextual.
-4. **Actualización por contexto**: cada capa refina el significado del token.
-5. **Predicción con softmax**: se calcula la probabilidad del siguiente token.
-6. **Repetición**: el proceso se repite hasta terminar la respuesta.
+## Cómo se usa
+- Presiona el botón del micrófono 🎤 y habla — te escucha en vivo, sin
+  límite de segundos fijo, y responde por voz automáticamente.
+- O escribe tu pregunta en la caja de texto de abajo.
 
-Ver `exploracion.py` para la demostración con una frase de ejemplo real.
+## Diferencias con la versión local
+| | Local (`Mini-Jarvis-vc/Asistente.py`) | Nube (esta versión) |
+|---|---|---|
+| LLM | Ollama (`llama3.2:1b`), local | Groq (`llama-3.1-8b-instant`), en la nube |
+| STT | Vosk, graba 8-10 seg fijos | Web Speech API del navegador, en vivo |
+| TTS | pyttsx3 | Voz nativa del navegador |
+| Requiere internet | No (excepto para OCR de imágenes) | Sí, siempre (LLM en la nube) |
+| Funciones extra (hora, temporizador, imagen) | Sí | Aún no (versión MVP) |
 
-## Limitaciones conocidas
-- Alucinaciones (puede inventar información).
-- Dificultad con razonamiento matemático exacto.
-- Pérdida de contexto en conversaciones muy largas.
-- Sesgos heredados del corpus de entrenamiento.
-- No tiene memoria real fuera del contexto de la conversación actual.
-- Depende de conexión a internet (a diferencia de la versión local con Ollama).
+## Nota de seguridad
+La API key de Groq nunca se escribe en el código ni se manda al
+navegador — vive solo en el archivo `.env` del servidor, y el frontend
+solo habla con este mismo backend (`/chat`), nunca directo con Groq.
