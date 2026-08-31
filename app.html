@@ -7,25 +7,76 @@
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-  <div class="container">
-    <h1>🤖 DamJar</h1>
-    <p class="subtitulo">Asistente en la nube (Groq) — habla en vivo o escribe</p>
 
-    <div id="estado">Presiona el micrófono para hablar</div>
-    <button id="micBtn">🎤</button>
+  <div class="layout">
 
-    <div id="textoInput">
-      <input type="text" id="cajaTexto" placeholder="...o escribe tu pregunta aquí">
-      <button id="enviarBtn">Enviar</button>
+    <div class="main-panel">
+
+      <div class="header">
+        <div class="header-top">
+          <div class="robot-panel">
+            <div class="robot-scale-wrapper">
+              <div class="cute-robot">
+                <div class="robot-ears left"></div>
+                <div class="robot-ears right"></div>
+                <div class="robot-head">
+                  <div class="robot-visor">
+                    <div class="robot-eye left"></div>
+                    <div class="robot-eye right"></div>
+                    <div class="robot-smile"></div>
+                  </div>
+                </div>
+                <div class="robot-body">
+                  <div class="robot-arm left"></div>
+                  <div class="robot-arm right"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mic-panel">
+            <div class="title-wrapper">
+              <h1>DamJar</h1>
+            </div>
+
+            <div id="micWrapper">
+              <canvas id="orbCanvas" width="160" height="160"></canvas>
+              <button id="micBtn">🎤</button>
+            </div>
+
+            <div id="estado">Presiona el micrófono para hablar</div>
+          </div>
+
+        </div>
+      </div>
+      
+      <div id="chat"></div>
+      
+      <div class="input-bar">
+        <div id="textoInput">
+          <input type="text" id="cajaTexto" placeholder="...o escribe tu pregunta aquí">
+          <button id="enviarBtn">Enviar</button>
+        </div>
+
+        <div id="imagenInput">
+          <label for="cajaImagen" id="imagenBtn">📷 Enviar imagen</label>
+          <input type="file" id="cajaImagen" accept="image/*" hidden>
+        </div>
+      </div>
+
     </div>
 
-    <div id="imagenInput">
-      <label for="cajaImagen" id="imagenBtn">📷 Enviar imagen</label>
-      <input type="file" id="cajaImagen" accept="image/*" hidden>
-    </div>
+    <!-- Historial -->
+    <aside id="chatHistory" class="sidebar">
+      <button id="toggleHistory" class="toggle-btn" title="Ocultar/Ver Historial">◀</button>
+      <div class="sidebar-content">
+        <h2>Historial</h2>
+        <ul id="historialLista"></ul>
+      </div>
+    </aside>
 
-    <div id="chat"></div>
   </div>
+
 
   <script src="js/app.js"></script>
 </body>
